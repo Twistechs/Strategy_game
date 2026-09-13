@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Carnet à Points</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFF5F7;
+    --grid:#CFE3EC;
+    --ink:#26313A;
+    --card:#FFFFFF;
+    --green:#2FA84F;
+    --green-dark:#1F7A38;
+    --amber:#F2994A;
+    --amber-dark:#8A4B12;
+    --indigo:#5B4B8A;
+    --indigo-dark:#33285A;
+    --red:#E0483E;
+    --muted:#6B7A85;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:'Nunito',sans-serif;
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:28px 28px;
+    padding:2rem 1rem 4rem;
+  }
+  h1{font-family:'Baloo 2',sans-serif;font-weight:700;margin:0;font-size:1.9rem;}
+  .tagline{color:var(--muted);margin:.35rem 0 0;font-size:.98rem;}
+  header{max-width:700px;margin:0 auto 1.2rem;text-align:center;}
+  .page-card{
+    max-width:700px;margin:0 auto;background:var(--card);
+    border-radius:18px;padding:1.4rem 1.4rem 1.6rem;
+    box-shadow:0 10px 26px rgba(38,49,58,0.10);
+    transform:rotate(-0.35deg);
+  }
+  .profile-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem;margin-bottom:1rem;}
+  .whoplays{font-weight:800;font-family:'Baloo 2',sans-serif;font-size:1.05rem;}
+  .switch-link{background:none;border:none;color:var(--muted);text-decoration:underline;font-size:.85rem;cursor:pointer;padding:0;}
+  .toolbar{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+  .toolbar-group{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;}
+  select, .stepbtn{
+    font-family:'Nunito',sans-serif;font-weight:700;font-size:.9rem;
+    border:1.5px solid var(--grid);background:#fff;border-radius:10px;
+    padding:.4rem .6rem;color:var(--ink);cursor:pointer;
+  }
+  .stepbtn{width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;}
+  .day-chip{font-weight:800;min-width:64px;text-align:center;font-size:.9rem;}
+  .score-chip{
+    background:#FBF3E8;border:1.5px solid var(--amber);color:var(--amber-dark);
+    font-weight:800;padding:.4rem .8rem;border-radius:999px;font-size:.9rem;
+    white-space:nowrap;
+  }
+  .board-wrap{position:relative;}
+  canvas{
+    width:100%;height:auto;display:block;
+    background:#fff;border:2.5px solid var(--ink);border-radius:14px;
+    touch-action:manipulation;cursor:pointer;
+  }
+  .actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem;}
+  button.act{
+    font-family:'Nunito',sans-serif;font-weight:800;font-size:.92rem;
+    border:none;cursor:pointer;padding:.65rem 1.1rem;display:flex;align-items:center;gap:.4rem;
+  }
+  button.joker{background:var(--amber);color:var(--amber-dark);border-radius:999px;}
+  button.joker:hover{background:#eb8b34;}
+  button.parent{background:var(--indigo);color:#fff;border-radius:10px;}
+  button.parent:hover{background:var(--indigo-dark);}
+  button.nextday{background:var(--green);color:#fff;border-radius:999px;margin-left:auto;}
+  button.nextday:hover{background:var(--green-dark);}
+  .progress-note{color:var(--muted);font-size:.85rem;margin-top:.7rem;}
+  .win-panel{
+    position:absolute;inset:0;background:rgba(255,255,255,.97);
+    border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:1.5rem;gap:.6rem;
+  }
+  .win-panel h2{font-family:'Baloo 2',sans-serif;color:var(--green-dark);margin:0;font-size:1.5rem;}
+  .win-score{font-weight:800;color:var(--amber-dark);font-size:1.15rem;}
+  .win-actions{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;margin-top:.4rem;}
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(38,49,58,.45);
+    display:flex;align-items:center;justify-content:center;z-index:50;padding:1rem;
+  }
+  .modal{
+    background:#fff;border-radius:16px;padding:1.6rem;max-width:340px;width:100%;
+    box-shadow:0 20px 40px rgba(0,0,0,.25);
+  }
+  .modal h3{font-family:'Baloo 2',sans-serif;margin:0 0 .5rem;font-size:1.25rem;}
+  .modal p{color:var(--muted);font-size:.92rem;margin:0 0 .9rem;}
+  .modal input{
+    width:100%;padding:.6rem .7rem;border:1.5px solid var(--grid);border-radius:10px;
+    font-size:1rem;font-family:'Nunito',sans-serif;margin-bottom:.6rem;
+  }
+  .modal .error{color:var(--red);font-size:.85rem;min-height:1.1em;margin:-.2rem 0 .5rem;}
+  .avatar{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:1.6em;height:1.6em;border-radius:50%;color:#fff;font-weight:800;
+    font-family:'Baloo 2',sans-serif;font-size:.85em;flex-shrink:0;
+  }
+  .profile-list{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.9rem;}
+  .profile-chip{
+    display:flex;align-items:center;gap:.4rem;background:#F3F5F7;border:1.5px solid var(--grid);
+    border-radius:999px;padding:.35rem .7rem .35rem .35rem;cursor:pointer;font-weight:700;
+    font-family:'Nunito',sans-serif;font-size:.88rem;color:var(--ink);
+  }
+  .profile-chip:hover{border-color:var(--indigo);}
+  .or-sep{color:var(--muted);font-size:.85rem;margin:.2rem 0 .5rem;}
+  .modal-actions{display:flex;gap:.5rem;justify-content:flex-end;}
+  .modal-actions button{
+    font-family:'Nunito',sans-serif;font-weight:700;border-radius:10px;border:none;
+    padding:.55rem 1rem;cursor:pointer;
+  }
+  .btn-primary{background:var(--indigo);color:#fff;}
+  .btn-plain{background:#EEF1F3;color:var(--ink);}
+  footer{max-width:700px;margin:1.4rem auto 0;text-align:center;color:var(--muted);font-size:.82rem;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Le Carnet à Points</h1>
+  <p class="tagline">Trouve à chaque fois le plus petit nombre restant en suivant la logique de la suite, pour découvrir une forme surprise.</p>
+</header>
+
+<div class="page-card">
+  <div class="profile-row">
+    <span class="whoplays"><span class="avatar" id="who-avatar" style="display:none;"></span> <span id="who-plays">—</span></span>
+    <button class="switch-link" id="switch-profile">Changer de joueur</button>
+  </div>
+
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <label for="level-select" style="font-size:.85rem;color:var(--muted);font-weight:700;">Niveau</label>
+      <select id="level-select"></select>
+      <button class="stepbtn" id="day-prev" aria-label="Jour précédent">‹</button>
+      <span class="day-chip" id="day-chip">Jour 1</span>
+      <button class="stepbtn" id="day-next" aria-label="Jour suivant">›</button>
+    </div>
+    <span class="score-chip" id="score-chip">Score total : 0</span>
+  </div>
+  <p class="progress-note" id="level-hint" style="margin:-.4rem 0 .8rem;"></p>
+
+  <div class="board-wrap" id="board-wrap">
+    <canvas id="board" width="640" height="640"></canvas>
+    <div class="win-panel hidden" id="win-panel">
+      <h2 id="win-title">Bravo !</h2>
+      <p id="win-shape"></p>
+      <p class="win-score" id="win-score"></p>
+      <div class="win-actions">
+        <button class="act joker" id="replay-anim">Revoir l'animation</button>
+        <button class="act nextday" id="win-next" style="margin-left:0;">Jour suivant</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="act parent" id="parent-btn">Besoin d'aide ? (code parent)</button>
+    <button class="act nextday" id="next-day-btn">Jour suivant</button>
+  </div>
+  <p class="progress-note" id="progress-note"></p>
+</div>
+
+<footer>Les scores sont enregistrés uniquement sur cet appareil, pas besoin de compte.</footer>
+
+<div class="modal-overlay" id="modal-profile">
+  <div class="modal">
+    <h3>Qui joue aujourd'hui ?</h3>
+    <p>Entre ton prénom pour retrouver ta progression.</p>
+    <div class="profile-list hidden" id="profile-list"></div>
+    <p class="or-sep hidden" id="or-sep">Ou un nouveau prénom :</p>
+    <input type="text" id="profile-input" placeholder="Ton prénom" maxlength="20">
+    <div class="error" id="profile-error"></div>
+    <div class="modal-actions">
+      <button class="btn-primary" id="profile-submit">Commencer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modal-pin">
+  <div class="modal">
+    <h3 id="pin-title">Code parent</h3>
+    <p id="pin-desc"></p>
+    <input type="password" id="pin-input" placeholder="4 chiffres" maxlength="4" inputmode="numeric">
+    <div class="error" id="pin-error"></div>
+    <div class="modal-actions">
+      <button class="btn-plain" id="pin-cancel">Annuler</button>
+      <button class="btn-primary" id="pin-submit">Valider</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modal-help-choice">
+  <div class="modal">
+    <h3>Code accepté</h3>
+    <p>Qu'est-ce que tu veux faire, en tant que parent ?</p>
+    <div class="modal-actions" style="justify-content:center;flex-direction:column;gap:.6rem;">
+      <button class="btn-primary" id="help-hint" style="width:100%;">Donner un indice (fait baisser les points)</button>
+      <button class="btn-plain" id="help-video" style="width:100%;">Montrer l'animation complète</button>
+      <button class="btn-plain" id="help-cancel" style="width:100%;">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SHAPES = {
+  triangle: [[[0.5,0.05],[0.95,0.9],[0.05,0.9]], true],
+  carre: [[[0.1,0.1],[0.9,0.1],[0.9,0.9],[0.1,0.9]], true],
+  rectangle: [[[0.05,0.25],[0.95,0.25],[0.95,0.75],[0.05,0.75]], true],
+  pentagone: [[[0.5,0.05],[0.95,0.4],[0.78,0.92],[0.22,0.92],[0.05,0.4]], true],
+  hexagone: [[[0.3,0.05],[0.7,0.05],[0.95,0.5],[0.7,0.95],[0.3,0.95],[0.05,0.5]], true],
+  losange: [[[0.5,0.05],[0.95,0.5],[0.5,0.95],[0.05,0.5]], true],
+  etoile5: [[[0.5,0.05],[0.61,0.38],[0.98,0.38],[0.68,0.6],[0.79,0.95],[0.5,0.74],[0.21,0.95],[0.32,0.6],[0.02,0.38],[0.39,0.38]], true],
+  etoile6: [[[0.5,0.05],[0.62,0.3],[0.9,0.2],[0.75,0.45],[0.95,0.65],[0.68,0.65],[0.6,0.95],[0.5,0.7],[0.4,0.95],[0.32,0.65],[0.05,0.65],[0.25,0.45],[0.1,0.2],[0.38,0.3]], true],
+  coeur: [[[0.5,0.9],[0.15,0.55],[0.05,0.3],[0.2,0.08],[0.4,0.1],[0.5,0.28],[0.6,0.1],[0.8,0.08],[0.95,0.3],[0.85,0.55]], true],
+  maison: [[[0.5,0.05],[0.9,0.4],[0.78,0.4],[0.78,0.9],[0.22,0.9],[0.22,0.4],[0.1,0.4]], true],
+  fleche_haut: [[[0.5,0.05],[0.85,0.4],[0.65,0.4],[0.65,0.95],[0.35,0.95],[0.35,0.4],[0.15,0.4]], true],
+  croix: [[[0.35,0.05],[0.65,0.05],[0.65,0.35],[0.95,0.35],[0.95,0.65],[0.65,0.65],[0.65,0.95],[0.35,0.95],[0.35,0.65],[0.05,0.65],[0.05,0.35],[0.35,0.35]], true],
+  bateau: [[[0.5,0.05],[0.5,0.55],[0.95,0.6],[0.75,0.9],[0.25,0.9],[0.05,0.6]], true],
+  drapeau: [[[0.15,0.05],[0.15,0.95],[0.15,0.55],[0.9,0.4],[0.15,0.2]], false],
+  tasse: [[[0.15,0.15],[0.65,0.15],[0.65,0.85],[0.15,0.85],[0.15,0.5],[0.15,0.5],[0.85,0.45],[0.85,0.65],[0.65,0.6]], false],
+  arbre: [[[0.5,0.05],[0.85,0.45],[0.68,0.45],[0.9,0.75],[0.58,0.75],[0.58,0.95],[0.42,0.95],[0.42,0.75],[0.1,0.75],[0.32,0.45],[0.15,0.45]], true],
+  poisson: [[[0.1,0.5],[0.35,0.25],[0.65,0.3],[0.9,0.15],[0.8,0.5],[0.9,0.85],[0.65,0.7],[0.35,0.75]], true],
+  papillon: [[[0.5,0.5],[0.3,0.15],[0.05,0.1],[0.02,0.35],[0.3,0.45],[0.5,0.5],[0.7,0.15],[0.95,0.1],[0.98,0.35],[0.7,0.45],[0.5,0.5],[0.3,0.85],[0.05,0.9],[0.02,0.65],[0.3,0.55],[0.5,0.5],[0.7,0.85],[0.95,0.9],[0.98,0.65],[0.7,0.55]], true],
+  fusee: [[[0.5,0.05],[0.65,0.4],[0.65,0.75],[0.8,0.95],[0.65,0.85],[0.5,0.95],[0.35,0.85],[0.2,0.95],[0.35,0.75],[0.35,0.4]], true],
+  soleil: [[[0.5,0.02],[0.58,0.2],[0.75,0.1],[0.72,0.28],[0.9,0.25],[0.78,0.4],[0.95,0.5],[0.78,0.6],[0.9,0.75],[0.72,0.72],[0.75,0.9],[0.58,0.8],[0.5,0.98],[0.42,0.8],[0.25,0.9],[0.28,0.72],[0.1,0.75],[0.22,0.6],[0.05,0.5],[0.22,0.4],[0.1,0.25],[0.28,0.28],[0.25,0.1],[0.42,0.2]], true],
+  lune: [[[0.65,0.05],[0.85,0.2],[0.95,0.5],[0.85,0.8],[0.65,0.95],[0.8,0.8],[0.85,0.5],[0.8,0.2]], true],
+  nuage: [[[0.25,0.6],[0.1,0.55],[0.08,0.4],[0.22,0.3],[0.3,0.15],[0.5,0.15],[0.6,0.3],[0.78,0.28],[0.92,0.4],[0.9,0.55],[0.78,0.62],[0.7,0.6],[0.3,0.6]], true],
+  voiture: [[[0.1,0.6],[0.15,0.4],[0.35,0.3],[0.65,0.3],[0.85,0.4],[0.9,0.6],[0.75,0.6],[0.7,0.75],[0.55,0.75],[0.5,0.6],[0.35,0.6],[0.3,0.75],[0.15,0.75],[0.15,0.6]], true],
+  cerf_volant: [[[0.5,0.05],[0.9,0.4],[0.5,0.6],[0.1,0.4]], true],
+  pomme: [[[0.5,0.2],[0.5,0.1],[0.6,0.05],[0.65,0.15],[0.85,0.3],[0.95,0.55],[0.8,0.85],[0.55,0.95],[0.45,0.95],[0.2,0.85],[0.05,0.55],[0.15,0.3],[0.35,0.15]], true],
+  feuille: [[[0.5,0.05],[0.85,0.3],[0.9,0.6],[0.65,0.9],[0.5,0.95],[0.5,0.5]], false],
+  cle: [[[0.15,0.5],[0.35,0.3],[0.55,0.3],[0.65,0.4],[0.55,0.5],[0.65,0.5],[0.95,0.5],[0.95,0.65],[0.85,0.65],[0.85,0.5],[0.75,0.5],[0.75,0.6],[0.65,0.6]], false],
+  enveloppe: [[[0.05,0.2],[0.95,0.2],[0.95,0.8],[0.05,0.8],[0.05,0.2],[0.5,0.5],[0.95,0.2]], false],
+  eclair: [[[0.55,0.05],[0.2,0.55],[0.45,0.55],[0.35,0.95],[0.8,0.4],[0.55,0.4]], true],
+  escalier: [[[0.05,0.95],[0.05,0.75],[0.3,0.75],[0.3,0.55],[0.55,0.55],[0.55,0.35],[0.8,0.35],[0.8,0.15],[0.95,0.15]], false],
+  spirale: [[[0.5,0.5],[0.6,0.5],[0.6,0.6],[0.4,0.6],[0.4,0.4],[0.7,0.4],[0.7,0.7],[0.3,0.7],[0.3,0.3],[0.8,0.3],[0.8,0.8],[0.2,0.8]], false],
+  diamant_double: [[[0.5,0.05],[0.75,0.3],[0.5,0.5],[0.75,0.7],[0.5,0.95],[0.25,0.7],[0.5,0.5],[0.25,0.3]], true]
+};
+const SHAPE_LABELS = {
+  triangle:"un triangle", carre:"un carré", rectangle:"un rectangle", pentagone:"un pentagone",
+  hexagone:"un hexagone", losange:"un losange", etoile5:"une étoile", etoile6:"une étoile à six branches",
+  coeur:"un cœur", maison:"une maison", fleche_haut:"une flèche", croix:"une croix", bateau:"un bateau",
+  drapeau:"un drapeau", tasse:"une tasse", arbre:"un arbre", poisson:"un poisson", papillon:"un papillon",
+  fusee:"une fusée", soleil:"un soleil", lune:"une lune", nuage:"un nuage", voiture:"une voiture",
+  cerf_volant:"un cerf-volant", pomme:"une pomme", feuille:"une feuille", cle:"une clé",
+  enveloppe:"une enveloppe", eclair:"un éclair", escalier:"un escalier", spirale:"une spirale",
+  diamant_double:"un diamant"
+};
+const POINTS_PER_LEVEL = [6,8,10,13,16,19,22,26,30,34];
+const DAYS_PER_LEVEL = 100;
+
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function transformPts(pts, angleDeg, scale, mirror){
+  const a = angleDeg * Math.PI / 180;
+  return pts.map(([x,y])=>{
+    x -= 0.5; y -= 0.5;
+    if(mirror) x = -x;
+    const xr = x*Math.cos(a) - y*Math.sin(a);
+    const yr = x*Math.sin(a) + y*Math.cos(a);
+    return [xr*scale+0.5, yr*scale+0.5];
+  });
+}
+function resamplePts(pts, closed, targetN){
+  const n = pts.length;
+  const segs = []; let total = 0;
+  const count = closed ? n : n-1;
+  for(let i=0;i<count;i++){
+    const a = pts[i], b = pts[(i+1)%n];
+    const d = Math.hypot(b[0]-a[0], b[1]-a[1]);
+    segs.push(d); total += d;
+  }
+  if(total===0) return pts.slice(0,targetN);
+  const step = total / (closed ? targetN : targetN-1);
+  const out = [pts[0]];
+  let segIdx=0, curDist=0;
+  for(let k=1;k<targetN;k++){
+    const targetDist = k*step;
+    while(segIdx<segs.length && curDist+segs[segIdx] < targetDist){
+      curDist += segs[segIdx]; segIdx++;
+    }
+    if(segIdx>=segs.length){ out.push(closed? pts[0] : pts[pts.length-1]); continue; }
+    const a = pts[segIdx], b = pts[(segIdx+1)%n];
+    const segLen = segs[segIdx] || 1e-6;
+    const t = (targetDist-curDist)/segLen;
+    out.push([a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t]);
+  }
+  return out;
+}
+function generatePuzzle(level, day){
+  const seed = level*100000 + day;
+  const rnd = mulberry32(seed);
+  const names = Object.keys(SHAPES);
+  const shapeName = names[Math.floor(rnd()*names.length)];
+  const [basePts, closed] = SHAPES[shapeName];
+  const angleOpts = [0,0,0,8,-8,15,-15,20,-20];
+  const angle = angleOpts[Math.floor(rnd()*angleOpts.length)];
+  const scale = 0.92 + rnd()*0.08;
+  const mirror = rnd() < 0.4;
+  let pts = transformPts(basePts, angle, scale, mirror);
+  const n = POINTS_PER_LEVEL[level-1];
+  pts = resamplePts(pts, closed, n);
+  const seq = buildSequence(level, rnd, n);
+  return { points: pts, closed, shapeName, n, seq };
+}
+
+function buildSequence(level, rnd, n){
+  const vals = [];
+  let cur, step;
+  if(level<=1){
+    cur = 1 + Math.floor(rnd()*5);
+    for(let i=0;i<n;i++){ vals.push(cur); cur += 1; }
+  } else if(level===2){
+    cur = 2 + 2*Math.floor(rnd()*3);
+    for(let i=0;i<n;i++){ vals.push(cur); cur += 2; }
+  } else if(level===3){
+    cur = 3 + 3*Math.floor(rnd()*2);
+    for(let i=0;i<n;i++){ vals.push(cur); cur += 3; }
+  } else if(level===4){
+    cur = 5;
+    for(let i=0;i<n;i++){ vals.push(cur); cur += 5; }
+  } else if(level===5){
+    cur = 10;
+    for(let i=0;i<n;i++){ vals.push(cur); cur += 10; }
+  } else if(level===6){
+    step = [3,4,6,7,8,9][Math.floor(rnd()*6)];
+    cur = step;
+    for(let i=0;i<n;i++){ vals.push(cur); cur += step; }
+  } else if(level===7){
+    const pair = [[1,3],[2,4],[1,4],[2,5]][Math.floor(rnd()*4)];
+    cur = 1;
+    for(let i=0;i<n;i++){ vals.push(cur); cur += pair[i%2]; }
+  } else if(level===8){
+    let gap = 1 + Math.floor(rnd()*2);
+    cur = 1;
+    for(let i=0;i<n;i++){ vals.push(cur); cur += gap; gap += 1; }
+  } else if(level===9){
+    for(let i=0;i<n;i++){ vals.push((i+1)*(i+1)); }
+  } else {
+    cur = 0;
+    for(let i=0;i<n;i++){ cur += 2 + Math.floor(rnd()*8); vals.push(cur); }
+  }
+  return vals;
+}
+
+const SEQUENCE_HINTS = {
+  1: "Compte les nombres un par un.",
+  2: "Ils avancent de 2 en 2.",
+  3: "Ils avancent de 3 en 3.",
+  4: "Ils avancent de 5 en 5.",
+  5: "Ils avancent de 10 en 10.",
+  6: "Cherche la table de multiplication utilisée.",
+  7: "L'écart entre les nombres change à chaque fois : observe le rythme.",
+  8: "L'écart entre les nombres grandit à chaque étape.",
+  9: "Chaque nombre est un carré parfait (1, 4, 9, 16...).",
+  10: "Il n'y a pas de rythme fixe : compare bien chaque nombre."
+};
+
+const canvas = document.getElementById('board');
+const ctx = canvas.getContext('2d');
+const SIZE = 640, MARGIN = 55;
+
+function toCanvasPts(pts){
+  const usable = SIZE - 2*MARGIN;
+  return pts.map(([x,y])=>[MARGIN + x*usable, MARGIN + y*usable]);
+}
+
+let level = 1, day = 1;
+let puzzle = null, cpts = null;
+let currentIndex = 0;
+let jokerUsedSteps = new Set();
+let puzzleScore = 0;
+let gameState = 'playing';
+let hintUntil = 0;
+let profileName = null;
+let profileDisplay = null;
+let profileData = { progress: {} };
+
+function dotRadius(n){
+  return Math.max(13, 21 - n*0.24);
+}
+
+function draw(){
+  ctx.clearRect(0,0,SIZE,SIZE);
+  const r = dotRadius(puzzle.n);
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = '#2FA84F';
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  for(let i=0;i<currentIndex-1;i++){
+    ctx.moveTo(cpts[i][0], cpts[i][1]);
+    ctx.lineTo(cpts[i+1][0], cpts[i+1][1]);
+  }
+  ctx.stroke();
+  if(gameState==='won' && puzzle.closed){
+    ctx.beginPath();
+    ctx.moveTo(cpts[cpts.length-1][0], cpts[cpts.length-1][1]);
+    ctx.lineTo(cpts[0][0], cpts[0][1]);
+    ctx.stroke();
+  }
+  const now = performance.now();
+  const hinting = now < hintUntil;
+  cpts.forEach((p,i)=>{
+    const [x,y] = p;
+    if(hinting && i===currentIndex){
+      const pulse = 6*Math.sin(now/90);
+      ctx.beginPath();
+      ctx.arc(x,y,r+10+pulse,0,Math.PI*2);
+      ctx.strokeStyle = '#F2994A';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle = i < currentIndex ? '#DFF3E4' : '#FFFFFF';
+    ctx.fill();
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#26313A';
+    ctx.stroke();
+    ctx.fillStyle = '#26313A';
+    ctx.font = (r>=16?'700 15px':'700 12px') + " 'Nunito', sans-serif";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(puzzle.seq[i]), x, y+1);
+  });
+  if(hinting) requestAnimationFrame(draw);
+}
+
+function nearestPoint(x,y){
+  let best=-1, bestD=Infinity;
+  cpts.forEach((p,i)=>{
+    const d = Math.hypot(p[0]-x,p[1]-y);
+    if(d<bestD){bestD=d;best=i;}
+  });
+  const r = dotRadius(puzzle.n);
+  return bestD <= r+16 ? best : -1;
+}
+
+let flashIndex=-1;
+function onPointer(evt){
+  if(gameState!=='playing') return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = SIZE/rect.width, scaleY = SIZE/rect.height;
+  const cx = ((evt.touches? evt.touches[0].clientX : evt.clientX) - rect.left)*scaleX;
+  const cy = ((evt.touches? evt.touches[0].clientY : evt.clientY) - rect.top)*scaleY;
+  const idx = nearestPoint(cx,cy);
+  if(idx===-1) return;
+  if(idx===currentIndex){
+    acceptPoint();
+  } else {
+    flashWrong(idx);
+  }
+}
+function flashWrong(idx){
+  const [x,y] = cpts[idx];
+  const r = dotRadius(puzzle.n);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x,y,r+6,0,Math.PI*2);
+  ctx.strokeStyle = '#E0483E';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.restore();
+  setTimeout(draw, 220);
+}
+function acceptPoint(){
+  const stepPoints = Math.round(100/puzzle.n);
+  const used = jokerUsedSteps.has(currentIndex);
+  const earned = used ? Math.round(stepPoints/2) : stepPoints;
+  puzzleScore += earned;
+  currentIndex++;
+  draw();
+  if(currentIndex===puzzle.n){
+    finishPuzzle();
+  }
+}
+function finishPuzzle(){
+  gameState='won';
+  const key = `L${level}_D${day}`;
+  profileData.progress[key] = { score: puzzleScore, shape: puzzle.shapeName };
+  saveProfile();
+  document.getElementById('win-title').textContent = `Bravo ${profileDisplay} !`;
+  document.getElementById('win-shape').textContent = `Tu as découvert ${SHAPE_LABELS[puzzle.shapeName]} !`;
+  document.getElementById('win-score').textContent = `Points gagnés : ${puzzleScore} / 100`;
+  document.getElementById('win-panel').classList.remove('hidden');
+  updateScoreChip();
+  updateProgressNote();
+}
+
+canvas.addEventListener('click', onPointer);
+canvas.addEventListener('touchstart', function(e){ e.preventDefault(); onPointer(e); }, {passive:false});
+
+function giveHint(){
+  if(gameState!=='playing') return;
+  jokerUsedSteps.add(currentIndex);
+  hintUntil = performance.now() + 1600;
+  draw();
+}
+
+function loadPuzzle(){
+  puzzle = generatePuzzle(level, day);
+  cpts = toCanvasPts(puzzle.points);
+  currentIndex = 0;
+  jokerUsedSteps = new Set();
+  puzzleScore = 0;
+  gameState='playing';
+  document.getElementById('win-panel').classList.add('hidden');
+  document.getElementById('day-chip').textContent = `Jour ${day}`;
+  document.getElementById('level-hint').textContent = "Ce niveau : " + SEQUENCE_HINTS[level];
+  draw();
+  updateProgressNote();
+}
+
+function goNextDay(){
+  day++;
+  if(day>DAYS_PER_LEVEL){
+    day=1;
+    level = Math.min(10, level+1);
+    document.getElementById('level-select').value = String(level);
+  }
+  loadPuzzle();
+}
+document.getElementById('next-day-btn').addEventListener('click', goNextDay);
+document.getElementById('win-next').addEventListener('click', goNextDay);
+document.getElementById('day-prev').addEventListener('click', ()=>{ if(day>1){ day--; loadPuzzle(); } });
+document.getElementById('day-next').addEventListener('click', goNextDay);
+
+const levelSelect = document.getElementById('level-select');
+for(let i=1;i<=10;i++){
+  const opt = document.createElement('option');
+  opt.value=String(i); opt.textContent=`Niveau ${i}`;
+  levelSelect.appendChild(opt);
+}
+levelSelect.addEventListener('change', ()=>{
+  level = parseInt(levelSelect.value,10);
+  day = 1;
+  loadPuzzle();
+});
+
+function playSolutionAnimation(onDone){
+  let i = 1;
+  const total = puzzle.n;
+  const limit = puzzle.closed ? total : total-1;
+  const timer = setInterval(()=>{
+    ctx.clearRect(0,0,SIZE,SIZE);
+    const r = dotRadius(puzzle.n);
+    ctx.lineWidth=6; ctx.strokeStyle='#2B6FE0'; ctx.lineCap='round';
+    ctx.beginPath();
+    for(let k=0;k<i;k++){
+      const a = cpts[k%cpts.length], b = cpts[(k+1)%cpts.length];
+      if(k+1>total) break;
+      if(!puzzle.closed && k+1>=total) break;
+      ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]);
+    }
+    ctx.stroke();
+    cpts.forEach((p,idx)=>{
+      ctx.beginPath();
+      ctx.arc(p[0],p[1],r,0,Math.PI*2);
+      ctx.fillStyle = idx<=i ? '#DDEBFB' : '#fff';
+      ctx.fill();
+      ctx.lineWidth=2.5; ctx.strokeStyle='#26313A'; ctx.stroke();
+      ctx.fillStyle='#26313A';
+      ctx.font=(r>=16?'700 15px':'700 12px')+" 'Nunito', sans-serif";
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(String(puzzle.seq[idx]), p[0], p[1]+1);
+    });
+    i++;
+    if(i>limit){ clearInterval(timer); if(onDone) onDone(); }
+  }, 420);
+}
+document.getElementById('replay-anim').addEventListener('click', ()=>{
+  document.getElementById('win-panel').classList.add('hidden');
+  playSolutionAnimation(()=>{ draw(); document.getElementById('win-panel').classList.remove('hidden'); });
+});
+
+async function storeGet(key){
+  try{ const r = await window.storage.get(key,false); return r? r.value : null; }catch(e){ return null; }
+}
+async function storeSet(key,value){
+  try{ await window.storage.set(key,value,false); }catch(e){}
+}
+async function saveProfile(){
+  await storeSet('profile:'+profileName, JSON.stringify(profileData));
+}
+async function loadProfile(name){
+  const raw = await storeGet('profile:'+name);
+  profileData = raw ? JSON.parse(raw) : { progress:{} };
+}
+function updateScoreChip(){
+  const total = Object.values(profileData.progress).reduce((s,p)=>s+p.score,0);
+  document.getElementById('score-chip').textContent = `Score total : ${total}`;
+}
+function updateProgressNote(){
+  let done=0;
+  for(let d=1; d<=DAYS_PER_LEVEL; d++){
+    if(profileData.progress[`L${level}_D${d}`]) done++;
+  }
+  document.getElementById('progress-note').textContent = `${done} / ${DAYS_PER_LEVEL} jours réalisés au niveau ${level}.`;
+}
+
+const AVATAR_COLORS = ['#2FA84F','#5B4B8A','#F2994A','#2B6FE0','#D4537E','#0F6E56','#993C1D'];
+function avatarColor(name){
+  let h=0;
+  for(let i=0;i<name.length;i++) h = (h*31 + name.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+function setActiveAvatar(name){
+  const av = document.getElementById('who-avatar');
+  av.style.display='inline-flex';
+  av.style.background = avatarColor(name);
+  av.textContent = name.charAt(0).toUpperCase();
+}
+async function getProfileList(){
+  const raw = await storeGet('profile_list');
+  return raw ? JSON.parse(raw) : [];
+}
+async function addToProfileList(display){
+  const key = display.trim().toLowerCase();
+  const list = await getProfileList();
+  if(!list.some(p=>p.key===key)){
+    list.push({key, display});
+    await storeSet('profile_list', JSON.stringify(list));
+  }
+  return list;
+}
+async function renderProfileList(){
+  const list = await getProfileList();
+  const box = document.getElementById('profile-list');
+  const sep = document.getElementById('or-sep');
+  box.innerHTML='';
+  if(list.length===0){
+    box.classList.add('hidden');
+    sep.classList.add('hidden');
+    return;
+  }
+  box.classList.remove('hidden');
+  sep.classList.remove('hidden');
+  list.forEach(p=>{
+    const chip = document.createElement('button');
+    chip.type='button';
+    chip.className='profile-chip';
+    chip.innerHTML = `<span class="avatar" style="background:${avatarColor(p.display)}">${p.display.charAt(0).toUpperCase()}</span>${p.display}`;
+    chip.addEventListener('click', ()=> selectProfile(p.display));
+    box.appendChild(chip);
+  });
+}
+async function selectProfile(name){
+  const err = document.getElementById('profile-error');
+  err.textContent='';
+  profileName = name.trim().toLowerCase();
+  profileDisplay = name.trim();
+  await loadProfile(profileName);
+  await addToProfileList(name.trim());
+  document.getElementById('who-plays').textContent = `Bonjour ${name.trim()} !`;
+  setActiveAvatar(name.trim());
+  document.getElementById('modal-profile').classList.add('hidden');
+  levelSelect.value = String(level);
+  loadPuzzle();
+  updateScoreChip();
+}
+document.getElementById('profile-submit').addEventListener('click', async ()=>{
+  const val = document.getElementById('profile-input').value.trim();
+  const err = document.getElementById('profile-error');
+  if(!val){ err.textContent = 'Entre un prénom pour continuer.'; return; }
+  await selectProfile(val);
+});
+document.getElementById('profile-input').addEventListener('input', ()=>{
+  document.getElementById('profile-error').textContent='';
+});
+document.getElementById('switch-profile').addEventListener('click', async ()=>{
+  document.getElementById('profile-input').value='';
+  document.getElementById('profile-error').textContent='';
+  await renderProfileList();
+  document.getElementById('modal-profile').classList.remove('hidden');
+});
+renderProfileList();
+
+let pinMode = 'verify';
+async function openPinModal(){
+  const existing = await storeGet('parent_pin');
+  const title = document.getElementById('pin-title');
+  const desc = document.getElementById('pin-desc');
+  document.getElementById('pin-input').value='';
+  document.getElementById('pin-error').textContent='';
+  if(!existing){
+    pinMode='create';
+    title.textContent='Crée un code parent';
+    desc.textContent="Choisis 4 chiffres. Ce code te permettra de débloquer la solution si l'enfant est bloqué.";
+  } else {
+    pinMode='verify';
+    title.textContent='Code parent';
+    desc.textContent='Entre ton code à 4 chiffres pour voir la solution animée.';
+  }
+  document.getElementById('modal-pin').classList.remove('hidden');
+}
+document.getElementById('parent-btn').addEventListener('click', openPinModal);
+document.getElementById('pin-cancel').addEventListener('click', ()=>{
+  document.getElementById('modal-pin').classList.add('hidden');
+});
+document.getElementById('pin-submit').addEventListener('click', async ()=>{
+  const val = document.getElementById('pin-input').value.trim();
+  const err = document.getElementById('pin-error');
+  if(!/^\d{4}$/.test(val)){ err.textContent='Entre exactement 4 chiffres.'; return; }
+  if(pinMode==='create'){
+    await storeSet('parent_pin', val);
+    document.getElementById('modal-pin').classList.add('hidden');
+  } else {
+    const existing = await storeGet('parent_pin');
+    if(val!==existing){ err.textContent='Code incorrect, réessaie.'; return; }
+    document.getElementById('modal-pin').classList.add('hidden');
+    document.getElementById('modal-help-choice').classList.remove('hidden');
+  }
+});
+document.getElementById('help-cancel').addEventListener('click', ()=>{
+  document.getElementById('modal-help-choice').classList.add('hidden');
+});
+document.getElementById('help-hint').addEventListener('click', ()=>{
+  document.getElementById('modal-help-choice').classList.add('hidden');
+  giveHint();
+});
+document.getElementById('help-video').addEventListener('click', ()=>{
+  document.getElementById('modal-help-choice').classList.add('hidden');
+  const wasWon = gameState==='won';
+  if(!wasWon) document.getElementById('win-panel').classList.add('hidden');
+  playSolutionAnimation(()=>{
+    if(wasWon){ draw(); document.getElementById('win-panel').classList.remove('hidden'); }
+    else draw();
+  });
+});
+</script>
+</body>
+</html>
