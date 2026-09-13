@@ -129,7 +129,7 @@
 
 <header>
   <h1>Le Carnet à Points</h1>
-  <p class="tagline">Relie les points dans l'ordre pour découvrir une forme surprise.</p>
+  <p class="tagline">Relie les points dans le bon ordre pour découvrir une forme surprise. Le point clair indique où commencer.</p>
 </header>
 
 <div class="page-card">
@@ -163,8 +163,7 @@
   </div>
 
   <div class="actions">
-    <button class="act joker" id="joker-btn">Utiliser un joker</button>
-    <button class="act parent" id="parent-btn">Code parent</button>
+    <button class="act parent" id="parent-btn">Besoin d'aide ? (code parent)</button>
     <button class="act nextday" id="next-day-btn">Jour suivant</button>
   </div>
   <p class="progress-note" id="progress-note"></p>
@@ -195,6 +194,18 @@
     <div class="modal-actions">
       <button class="btn-plain" id="pin-cancel">Annuler</button>
       <button class="btn-primary" id="pin-submit">Valider</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modal-help-choice">
+  <div class="modal">
+    <h3>Code accepté</h3>
+    <p>Qu'est-ce que tu veux faire, en tant que parent ?</p>
+    <div class="modal-actions" style="justify-content:center;flex-direction:column;gap:.6rem;">
+      <button class="btn-primary" id="help-hint" style="width:100%;">Donner un indice (fait baisser les points)</button>
+      <button class="btn-plain" id="help-video" style="width:100%;">Montrer l'animation complète</button>
+      <button class="btn-plain" id="help-cancel" style="width:100%;">Annuler</button>
     </div>
   </div>
 </div>
@@ -363,16 +374,15 @@ function draw(){
     }
     ctx.beginPath();
     ctx.arc(x,y,r,0,Math.PI*2);
-    ctx.fillStyle = i < currentIndex ? '#DFF3E4' : '#FFFFFF';
+    if(i===0 && currentIndex===0){
+      ctx.fillStyle = '#FBEEDD';
+    } else {
+      ctx.fillStyle = i < currentIndex ? '#DFF3E4' : '#FFFFFF';
+    }
     ctx.fill();
     ctx.lineWidth = 2.5;
-    ctx.strokeStyle = i===currentIndex ? '#2B6FE0' : '#26313A';
+    ctx.strokeStyle = '#26313A';
     ctx.stroke();
-    ctx.fillStyle = '#26313A';
-    ctx.font = (r>15?'700 16px':'700 13px') + " 'Nunito', sans-serif";
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(String(i+1), x, y+1);
   });
   if(hinting) requestAnimationFrame(draw);
 }
@@ -441,12 +451,12 @@ function finishPuzzle(){
 canvas.addEventListener('click', onPointer);
 canvas.addEventListener('touchstart', function(e){ e.preventDefault(); onPointer(e); }, {passive:false});
 
-document.getElementById('joker-btn').addEventListener('click', ()=>{
+function giveHint(){
   if(gameState!=='playing') return;
   jokerUsedSteps.add(currentIndex);
   hintUntil = performance.now() + 1600;
   draw();
-});
+}
 
 function loadPuzzle(){
   puzzle = generatePuzzle(level, day);
@@ -658,13 +668,24 @@ document.getElementById('pin-submit').addEventListener('click', async ()=>{
     const existing = await storeGet('parent_pin');
     if(val!==existing){ err.textContent='Code incorrect, réessaie.'; return; }
     document.getElementById('modal-pin').classList.add('hidden');
-    const wasWon = gameState==='won';
-    if(!wasWon) document.getElementById('win-panel').classList.add('hidden');
-    playSolutionAnimation(()=>{
-      if(wasWon){ draw(); document.getElementById('win-panel').classList.remove('hidden'); }
-      else draw();
-    });
+    document.getElementById('modal-help-choice').classList.remove('hidden');
   }
+});
+document.getElementById('help-cancel').addEventListener('click', ()=>{
+  document.getElementById('modal-help-choice').classList.add('hidden');
+});
+document.getElementById('help-hint').addEventListener('click', ()=>{
+  document.getElementById('modal-help-choice').classList.add('hidden');
+  giveHint();
+});
+document.getElementById('help-video').addEventListener('click', ()=>{
+  document.getElementById('modal-help-choice').classList.add('hidden');
+  const wasWon = gameState==='won';
+  if(!wasWon) document.getElementById('win-panel').classList.add('hidden');
+  playSolutionAnimation(()=>{
+    if(wasWon){ draw(); document.getElementById('win-panel').classList.remove('hidden'); }
+    else draw();
+  });
 });
 </script>
 </body>
