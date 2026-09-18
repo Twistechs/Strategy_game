@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Labyrinthe des Nœuds - Jeu Éducatif</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Écran de démarrage -->
+    <div id="login-screen" class="screen">
+        <h1>🧠 Labyrinthe des Nœuds</h1>
+        <p>Entre ton nom pour commencer l'aventure !</p>
+        <input type="text" id="player-name" placeholder="Ton nom..." maxlength="15">
+        <button id="start-btn">Jouer</button>
+        <div id="welcome-back" class="hidden">
+            <p>Bon retour, <span id="saved-name"></span> !</p>
+            <button id="continue-btn">Continuer</button>
+        </div>
+    </div>
+
+    <!-- Écran de jeu -->
+    <div id="game-screen" class="screen hidden">
+        <header>
+            <div class="stat">👤 <span id="ui-name">Joueur</span></div>
+            <div class="stat">⭐ <span id="ui-score">0</span> pts</div>
+            <div class="stat">🏆 Niveau <span id="ui-level">1</span></div>
+        </header>
+        
+        <canvas id="gameCanvas"></canvas>
+        
+        <div class="controls">
+            <button id="reset-btn" class="btn-secondary">🔄 Recommencer</button>
+            <button id="solution-btn" class="btn-danger">🔑 Voir la solution</button>
+        </div>
+    </div>
+
+    <!-- Fenêtre modale pour le code parent -->
+    <div id="parent-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Autorisation Parentale</h3>
+            <p>Veuillez entrer le code parent pour afficher la solution.</p>
+            <input type="password" id="parent-code" placeholder="Code secret...">
+            <div class="modal-buttons">
+                <button id="cancel-parent" class="btn-secondary">Annuler</button>
+                <button id="submit-parent" class="btn-primary">Valider</button>
+            </div>
+            <p id="parent-error" class="error hidden">Code incorrect !</p>
+        </div>
+    </div>
+
+    <!-- Fenêtre modale de victoire -->
+    <div id="win-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>🎉 Bravo !</h2>
+            <p>Tu as terminé le niveau <span id="win-level"></span> !</p>
+            <p>+10 points</p>
+            <button id="next-level-btn" class="btn-primary">Niveau Suivant</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

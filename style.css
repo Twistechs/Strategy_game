@@ -1,0 +1,184 @@
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #121212;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.screen {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transition: opacity 0.3s;
+}
+
+.hidden {
+    display: none !important;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Écran de connexion */
+#login-screen {
+    justify-content: center;
+    text-align: center;
+}
+
+#login-screen h1 {
+    color: #4CAF50;
+    margin-bottom: 10px;
+}
+
+#login-screen input {
+    padding: 15px;
+    font-size: 18px;
+    border-radius: 10px;
+    border: 2px solid #333;
+    background: #222;
+    color: white;
+    text-align: center;
+    margin-bottom: 20px;
+    width: 80%;
+}
+
+button {
+    padding: 15px 30px;
+    font-size: 18px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: transform 0.1s;
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+.btn-primary { background-color: #4CAF50; color: white; }
+.btn-secondary { background-color: #333; color: white; }
+.btn-danger { background-color: #f44336; color: white; }
+
+/* Écran de jeu */
+#game-screen {
+    justify-content: space-between;
+}
+
+header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    background: #1e1e1e;
+    padding: 15px;
+    border-radius: 15px;
+    font-size: 16px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+canvas {
+    background-color: #1a1a1a;
+    border-radius: 20px;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+    touch-action: none; /* Empêche le défilement sur mobile */
+    margin: 10px 0;
+}
+
+.controls {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    justify-content: center;
+}
+
+.controls button {
+    flex: 1;
+    font-size: 14px;
+    padding: 12px;
+}
+
+/* Modales */
+.modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background: #222;
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    width: 90%;
+    max-width: 350px;
+    border: 1px solid #333;
+}
+
+.modal-content input {
+    padding: 12px;
+    width: 100%;
+    margin: 15px 0;
+    border-radius: 8px;
+    border: 1px solid #444;
+    background: #111;
+    color: white;
+    text-align: center;
+    font-size: 18px;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.modal-buttons button {
+    flex: 1;
+    font-size: 14px;
+    padding: 10px;
+}
+
+.error {
+    color: #f44336;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+/* Animation de victoire */
+#win-modal .modal-content {
+    border: 2px solid #4CAF50;
+    animation: popIn 0.3s ease-out;
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
